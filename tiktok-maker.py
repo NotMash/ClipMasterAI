@@ -84,11 +84,11 @@ def create_tiktok_video(youtube_url, start_time, end_time, additional_clip_path,
 # Example usage:
 final_video = create_tiktok_video(
     youtube_url="https://www.youtube.com/watch?v=h5nRDUYtgJw",
-    start_time=0,
-    end_time=10,
+    start_time=20,
+    end_time=35,
     # additional_clip_path="C:\\Users\\Ghafo\\Desktop\\projects\\Tiktok\\TikTok_ Minecraft COMPILATION.mp4",
     #C:\Users\Ghafo\Desktop\projects\Tiktok\TikTok_ Minecraft COMPILATION.mp4
-    # additionalclip_path="/Users/mash/PycharmProjects/pythonProject4/TikTok Minecraft COMPILATION.mp4",
+    additional_clip_path="/Users/mash/PycharmProjects/pythonProject4/TikTok_ Minecraft COMPILATION.mp4",
     subtitles_text="This is a TikTok video created using Python!"
 )
 

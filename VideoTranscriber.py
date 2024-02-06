@@ -128,6 +128,8 @@ class VideoTranscriber:
 
 model_path = "base"
 video_path = "C:/Users/Ghafo/Desktop/projects/Tiktok/1min360ppodcastexample.mp4"
+
+
 output_video_path = "test_videos/output.mp4"
 
 transcriber = VideoTranscriber(model_path, video_path)

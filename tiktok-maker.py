@@ -94,3 +94,8 @@ final_video = create_tiktok_video(
 
 
 print(f"Created TikTok video: {final_video}")
+
+
+#add captions
+#choose the best intervals
+#

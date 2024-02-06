@@ -4,8 +4,7 @@ from moviepy.editor import VideoFileClip, CompositeVideoClip, TextClip
 import os
 
 from moviepy.config import change_settings
-# C:\Program Files\ImageMagick-7.1.1-Q16-HDRI
-change_settings({"IMAGEMAGICK_BINARY": "C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI\\magick.exe"})
+change_settings({"IMAGEMAGICK_BINARY": "/opt/homebrew/bin/magick"})
 
 
 import ssl
@@ -65,7 +64,7 @@ def create_tiktok_video(youtube_url, start_time, end_time, additional_clip_path,
         height=output_resolution[1] // 2)
 
     # Load the additional clip and resize it
-    additional_clip = VideoFileClip(additional_clip_path).subclip(start_time, end_time).resize(height=output_resolution[1] // 2)
+    additional_clip = VideoFileClip(additional_clip_path).resize(height=output_resolution[1] // 2)
 
     # Stack the clips vertically
     final_video = CompositeVideoClip([youtube_video.set_position(("center", "top")),
@@ -84,13 +83,11 @@ def create_tiktok_video(youtube_url, start_time, end_time, additional_clip_path,
 # Example usage:
 final_video = create_tiktok_video(
     youtube_url="https://www.youtube.com/watch?v=h5nRDUYtgJw",
-    start_time=30,
-    end_time=35,
-    additional_clip_path="C:\\Users\\Ghafo\\Desktop\\projects\\Tiktok\\TikTok_ Minecraft COMPILATION.mp4",
-    #additional_clip_path="C:\\Users\\Ghafo\\Desktop\\projects\\Tiktok\\TikTok_ Minecraft COMPILATION.mp4",
+    start_time=0,
+    end_time=10,
+    additional_clip_path="/Users/mash/PycharmProjects/pythonProject4/TikTok_ Minecraft COMPILATION.mp4",
     subtitles_text="This is a TikTok video created using Python!"
 )
-#"C:\\Users\\Ghafo\\Desktop\\projects\\Tiktok\\TikTok_ Minecraft COMPILATION.mp4"
 
 
 print(f"Created TikTok video: {final_video}")
@@ -98,4 +95,4 @@ print(f"Created TikTok video: {final_video}")
 
 #add captions
 #choose the best intervals
-#
+#test mac comments

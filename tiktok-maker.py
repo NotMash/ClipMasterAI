@@ -21,20 +21,22 @@ def download_youtube_video(youtube_url, output_path):
 
 
 # Function to crop and resize video
-def edit_video(video_path, start_time, end_time, resize_dimensions, additional_clip_path):
-    # Load the main video clip
-    video = VideoFileClip(video_path)
-    # Crop the video
-    video = video.subclip(start_time, end_time)
-    # Resize the video
-    video = video.resize(resize_dimensions)
-    # Load the additional clip
-    additional_clip = VideoFileClip(additional_clip_path)
-    # Add the additional clip to the main video
-    final_video = CompositeVideoClip([video, additional_clip])
-    edited_video_path = "edited_video.mp4"
+# Function to crop, resize and stack videos vertically
+def edit_video(youtube_video_path, additional_clip_path, output_resolution):
+    # Load the main video clip, crop and resize to the top half of the output resolution
+    youtube_video = VideoFileClip(youtube_video_path).resize(height=output_resolution[1] // 2)
+    # Load the additional clip, crop and resize to the bottom half of the output resolution
+    additional_clip = VideoFileClip(additional_clip_path).resize(height=output_resolution[1] // 2)
+
+    # Stack the clips vertically
+    final_video = CompositeVideoClip([youtube_video.set_position(("center", "top")),
+                                      additional_clip.set_position(("center", "bottom"))],
+                                     size=output_resolution)
+
+    edited_video_path = "stacked_video.mp4"
     final_video.write_videofile(edited_video_path)
     return edited_video_path
+
 
 # Function to add subtitles to the video
 def add_subtitles_to_video(video_path, subtitles_text):
@@ -50,23 +52,42 @@ def add_subtitles_to_video(video_path, subtitles_text):
     return final_video_path
 
 # Main automation function
-def create_tiktok_video(youtube_url, start_time, end_time, resize_dimensions, additional_clip_path, subtitles_text):
+# Function to create the final TikTok video
+# Function to create the final TikTok video
+def create_tiktok_video(youtube_url, start_time, end_time, additional_clip_path, subtitles_text,
+                        output_resolution=(1920, 1080)):
     # Download the YouTube video
-    downloaded_video = download_youtube_video(youtube_url, os.getcwd())
-    # Crop and resize the video
-    edited_video = edit_video(downloaded_video, start_time, end_time, resize_dimensions, additional_clip_path)
+    downloaded_video_path = download_youtube_video(youtube_url, os.getcwd())
+
+    # Crop the downloaded video between start_time and end_time
+    youtube_video = VideoFileClip(downloaded_video_path).subclip(start_time, end_time).resize(
+        height=output_resolution[1] // 2)
+
+    # Load the additional clip and resize it
+    additional_clip = VideoFileClip(additional_clip_path).resize(height=output_resolution[1] // 2)
+
+    # Stack the clips vertically
+    final_video = CompositeVideoClip([youtube_video.set_position(("center", "top")),
+                                      additional_clip.set_position(("center", "bottom"))],
+                                     size=output_resolution)
+
+    edited_video_path = "stacked_video.mp4"
+    final_video.write_videofile(edited_video_path)
+
     # Add subtitles to the video
-    final_video = add_subtitles_to_video(edited_video, subtitles_text)
-    return final_video
+    final_video_with_subtitles_path = add_subtitles_to_video(edited_video_path, subtitles_text)
+
+    return final_video_with_subtitles_path
+
 
 # Example usage:
 final_video = create_tiktok_video(
     youtube_url="https://www.youtube.com/watch?v=h5nRDUYtgJw",
     start_time=0,
     end_time=10,
-    resize_dimensions=(720, 720),
     additional_clip_path="/Users/mash/PycharmProjects/pythonProject4/TikTok_ Minecraft COMPILATION.mp4",
     subtitles_text="This is a TikTok video created using Python!"
 )
+
 
 print(f"Created TikTok video: {final_video}")

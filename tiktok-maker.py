@@ -4,9 +4,9 @@ from moviepy.editor import VideoFileClip, CompositeVideoClip, TextClip
 import os
 
 from moviepy.config import change_settings
-# change_settings({"IMAGEMAGICK_BINARY": "C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe"})
+change_settings({"IMAGEMAGICK_BINARY": "C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe"})
 #"C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe"
-change_settings({"IMAGEMAGICK_BINARY": "/opt/homebrew/bin/magick"})
+#change_settings({"IMAGEMAGICK_BINARY": "/opt/homebrew/bin/magick"})
 
 import ssl
 from pytube import YouTube
@@ -88,8 +88,10 @@ final_video = create_tiktok_video(
     end_time=35,
     # additional_clip_path="C:\\Users\\Ghafo\\Desktop\\projects\\Tiktok\\TikTok_ Minecraft COMPILATION.mp4",
     #C:\Users\Ghafo\Desktop\projects\Tiktok\TikTok_ Minecraft COMPILATION.mp4
-    additional_clip_path="/Users/mash/PycharmProjects/pythonProject4/TikTok_ Minecraft COMPILATION.mp4",
-    subtitles_text="This is a TikTok video created using Python!"
+    #additional_clip_path="/Users/mash/PycharmProjects/pythonProject4/TikTok_ Minecraft COMPILATION.mp4",
+    #subtitles_text="This is a TikTok video created using Python!"
+    additional_clip_path = "C:\\Users\\ismai\\PycharmProjects\\TIKTOK-AUTOMATION\\downloaded_videos\\Ted.mp4",
+    subtitles_text= "This is a TikTok video created using Python- ISMAIL!"
 )
 
 

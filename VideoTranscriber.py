@@ -4,6 +4,7 @@ import cv2
 from moviepy.editor import ImageSequenceClip, AudioFileClip, VideoFileClip
 from tqdm import tqdm
 
+
 class VideoTranscriber:
     def __init__(self, model_path, video_path):
         self.model = whisper.load_model(model_path)
@@ -127,7 +128,7 @@ class VideoTranscriber:
         clip.write_videofile(output_video_path)
 
 model_path = "base"
-video_path = "C:/Users/Ghafo/Desktop/projects/Tiktok/1min360ppodcastexample.mp4"
+video_path = "C:\\Users\\ismai\\PycharmProjects\\TIKTOK-AUTOMATION\\final_video_with_subtitles.mp4"
 
 
 output_video_path = "test_videos/output.mp4"

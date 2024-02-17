@@ -1,3 +1,5 @@
+import shutil
+
 import whisper
 import os
 import cv2
@@ -97,11 +99,17 @@ class VideoTranscriber:
                     text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)
                     text_x = int((frame.shape[1] - text_size[0]) / 2)
                     text_y = int(height / 2)
+
+                    # Adding background color
+                    cv2.rectangle(frame, (text_x, text_y - text_size[1] - 5),
+                                  (text_x + text_size[0], text_y + 5), (0, 0, 0), -1)
+
                     cv2.putText(frame, text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
                     break
 
             cv2.imwrite(os.path.join(output_folder, str(N_frames) + ".jpg"), frame)
             N_frames += 1
+
 
         cap.release()
         print('Frames extracted')
@@ -125,9 +133,11 @@ class VideoTranscriber:
         audio = AudioFileClip(self.audio_path)
         clip = clip.set_audio(audio)
         clip.write_videofile(output_video_path)
+        shutil.rmtree(image_folder)
+
 
 model_path = "base"
-video_path = "C:/Users/Ghafo/Desktop/projects/Tiktok/1min360ppodcastexample.mp4"
+video_path = "final_video_with_subtitles.mp4"
 
 
 output_video_path = "test_videos/output.mp4"

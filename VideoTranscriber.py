@@ -30,7 +30,7 @@ class VideoTranscriber:
         asp = 16 / 9
         ret, frame = cap.read()
         width = frame[:, int(int(width - 1 / asp * height) / 2):width - int((width - 1 / asp * height) / 2)].shape[1]
-        width = width - (width * 0.5)
+        width = width - (width * 0.60)
         self.fps = cap.get(cv2.CAP_PROP_FPS)
         self.char_width = int(textsize[0] / len(text))
 
@@ -51,6 +51,7 @@ class VideoTranscriber:
                     i += 1
                     continue
                 length_in_pixels = len(words[i]) * self.char_width
+                #490 is meant to be wi
                 remaining_pixels = width - length_in_pixels
                 line = words[i]
 
@@ -89,7 +90,7 @@ class VideoTranscriber:
         asp = width / height
         N_frames = 0
 
-        font_path = "FONT/NabiModernFont.ttf"  # Path to your custom font
+        font_path = "FONT/BeyondWorthDemo-z8PZX.otf"  # Path to your custom font
         font_size = 40  # Adjust the font size as needed
         font = ImageFont.truetype(font_path, font_size)
 
@@ -102,7 +103,10 @@ class VideoTranscriber:
 
             for i in self.text_array:
                 if N_frames >= i[1] and N_frames <= i[2]:
-                    text = "  " + i[0]
+                    text = i[0] + ""
+                    words = text.split()
+                    # print("entire words(sentence)", words)
+                    # print("first word", words[0])
 
                     # Calculate text size
                     text_width = font.getmask(text).getbbox()[2]
@@ -119,11 +123,33 @@ class VideoTranscriber:
                     bg_color = (0, 0, 0)  # Background color (black in this case)
 
                     # COMMENT 70 can be changed to any value to adjust the height of the text box
-                    draw.rectangle([(text_x, text_y), (text_x + text_width, text_y + 70)], fill=bg_color)
+                    draw.rectangle([(text_x, text_y), (text_x + text_width + 1, text_y + 35)], fill=bg_color)
 
-                    # Add text with custom font
-                    text_color = (255, 255, 255)  # Text color (white in this case)
-                    draw.text((text_x, text_y), text, font=font, fill=text_color)
+                    x_offset = 0
+                    for i in range(0, len(words)):
+                        outline_width = 2  # Adjust the width of the outline as needed
+                        outline_x = text_x + x_offset
+                        outline_y = text_y
+
+                        draw.text((outline_x - outline_width, outline_y), words[i], font=font, fill=(0, 0, 0))  # Left
+                        draw.text((outline_x + outline_width, outline_y), words[i], font=font, fill=(0, 0, 0))  # Right
+                        draw.text((outline_x, outline_y - outline_width), words[i], font=font, fill=(0, 0, 0))  # Up
+                        draw.text((outline_x, outline_y + outline_width), words[i], font=font, fill=(0, 0, 0))  # Down
+
+
+                        if i == (len(words)// 2):
+                            text_color = (0, 255, 0)  # Specific color (red in this case)
+                        else:
+                            text_color = (255, 255,255)  # Default text color (white in this case)
+
+                        # Add text with custom font
+                        draw.text((text_x + x_offset, text_y), words[i], font=font, fill=text_color)
+                        x_offset += font.getmask(words[i]).getbbox()[2] + 15  # Add space between words
+
+
+                    # # Add text with custom font
+                    # text_color = (255, 255, 255)  # Text color (white in this case)
+                    # draw.text((text_x, text_y), text, font=font, fill=text_color)
 
                     # Convert PIL image to OpenCV format
                     frame = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
@@ -160,7 +186,7 @@ class VideoTranscriber:
 
 
 model_path = "base"
-video_path = "final_video_with_subtitles.mp4"
+video_path = "downloaded_videos/1080pvideo.mp4"
 
 
 output_video_path = "test_videos/output.mp4"

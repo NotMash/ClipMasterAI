@@ -5,7 +5,10 @@ import os
 import cv2
 from moviepy.editor import ImageSequenceClip, AudioFileClip, VideoFileClip
 from tqdm import tqdm
+from PIL import ImageFont, ImageDraw, Image
 
+
+import numpy as np
 class VideoTranscriber:
     def __init__(self, model_path, video_path):
         self.model = whisper.load_model(model_path)
@@ -27,7 +30,7 @@ class VideoTranscriber:
         asp = 16 / 9
         ret, frame = cap.read()
         width = frame[:, int(int(width - 1 / asp * height) / 2):width - int((width - 1 / asp * height) / 2)].shape[1]
-        width = width - (width * 0.1)
+        width = width - (width * 0.5)
         self.fps = cap.get(cv2.CAP_PROP_FPS)
         self.char_width = int(textsize[0] / len(text))
 
@@ -62,7 +65,7 @@ class VideoTranscriber:
                     else:
                         line += " " + words[i]
 
-                line_array = [line, int(start) + 15, int(len(line) / total_chars * total_frames) + int(start) + 15]
+                line_array = [line, int(start) + 10, int(len(line) / total_chars * total_frames) + int(start) + 10]
                 start = int(len(line) / total_chars * total_frames) + int(start)
                 lines.append(line_array)
                 self.text_array.append(line_array)
@@ -86,6 +89,10 @@ class VideoTranscriber:
         asp = width / height
         N_frames = 0
 
+        font_path = "FONT/NabiModernFont.ttf"  # Path to your custom font
+        font_size = 40  # Adjust the font size as needed
+        font = ImageFont.truetype(font_path, font_size)
+
         while True:
             ret, frame = cap.read()
             if not ret:
@@ -96,20 +103,34 @@ class VideoTranscriber:
             for i in self.text_array:
                 if N_frames >= i[1] and N_frames <= i[2]:
                     text = "  " + i[0]
-                    text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)
-                    text_x = int((frame.shape[1] - text_size[0]) / 2)
+
+                    # Calculate text size
+                    text_width = font.getmask(text).getbbox()[2]
+                    text_height = font.getmask(text).getbbox()[3]
+
+                    text_x = int((frame.shape[1] - text_width) / 2)
                     text_y = int(height / 2)
 
-                    # Adding background color
-                    cv2.rectangle(frame, (text_x, text_y - text_size[1] - 5),
-                                  (text_x + text_size[0], text_y + 5), (0, 0, 0), -1)
+                    # Create PIL image
+                    pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                    draw = ImageDraw.Draw(pil_image)
 
-                    cv2.putText(frame, text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2)
+                    # Adding background color
+                    bg_color = (0, 0, 0)  # Background color (black in this case)
+
+                    # COMMENT 70 can be changed to any value to adjust the height of the text box
+                    draw.rectangle([(text_x, text_y), (text_x + text_width, text_y + 70)], fill=bg_color)
+
+                    # Add text with custom font
+                    text_color = (255, 255, 255)  # Text color (white in this case)
+                    draw.text((text_x, text_y), text, font=font, fill=text_color)
+
+                    # Convert PIL image to OpenCV format
+                    frame = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
                     break
 
             cv2.imwrite(os.path.join(output_folder, str(N_frames) + ".jpg"), frame)
             N_frames += 1
-
 
         cap.release()
         print('Frames extracted')

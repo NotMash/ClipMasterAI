@@ -95,7 +95,7 @@ class VideoTranscriber:
 
             for i in self.text_array:
                 if N_frames >= i[1] and N_frames <= i[2]:
-                    text = i[0]
+                    text = "  " + i[0]
                     text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)
                     text_x = int((frame.shape[1] - text_size[0]) / 2)
                     text_y = int(height / 2)
@@ -104,7 +104,7 @@ class VideoTranscriber:
                     cv2.rectangle(frame, (text_x, text_y - text_size[1] - 5),
                                   (text_x + text_size[0], text_y + 5), (0, 0, 0), -1)
 
-                    cv2.putText(frame, text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+                    cv2.putText(frame, text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2)
                     break
 
             cv2.imwrite(os.path.join(output_folder, str(N_frames) + ".jpg"), frame)
@@ -133,6 +133,8 @@ class VideoTranscriber:
         audio = AudioFileClip(self.audio_path)
         clip = clip.set_audio(audio)
         clip.write_videofile(output_video_path)
+
+        # this line deletes the frames folder
         shutil.rmtree(image_folder)
 
 

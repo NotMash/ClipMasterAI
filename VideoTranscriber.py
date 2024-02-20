@@ -66,7 +66,7 @@ class VideoTranscriber:
                     else:
                         line += " " + words[i]
 
-                line_array = [line, int(start) + 10, int(len(line) / total_chars * total_frames) + int(start) + 10]
+                line_array = [line, int(start), int(len(line) / total_chars * total_frames) + int(start)]
                 start = int(len(line) / total_chars * total_frames) + int(start)
                 lines.append(line_array)
                 self.text_array.append(line_array)
@@ -90,7 +90,7 @@ class VideoTranscriber:
         asp = width / height
         N_frames = 0
 
-        font_path = "FONT/BeyondWorthDemo-z8PZX.otf"  # Path to your custom font
+        font_path = "FONT/Frank.ttf"  # Path to your custom font
         font_size = 40  # Adjust the font size as needed
         font = ImageFont.truetype(font_path, font_size)
 
@@ -123,11 +123,11 @@ class VideoTranscriber:
                     bg_color = (0, 0, 0)  # Background color (black in this case)
 
                     # COMMENT 70 can be changed to any value to adjust the height of the text box
-                    draw.rectangle([(text_x, text_y), (text_x + text_width + 1, text_y + 35)], fill=bg_color)
+                    #draw.rectangle([(text_x, text_y), (text_x + text_width + 1, text_y + 35)], fill=bg_color)
 
                     x_offset = 0
                     for i in range(0, len(words)):
-                        outline_width = 2  # Adjust the width of the outline as needed
+                        outline_width = 1.5  # Adjust the width of the outline as needed
                         outline_x = text_x + x_offset
                         outline_y = text_y
 

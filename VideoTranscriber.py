@@ -7,6 +7,7 @@ from moviepy.editor import ImageSequenceClip, AudioFileClip, VideoFileClip
 from tqdm import tqdm
 from PIL import ImageFont, ImageDraw, Image
 
+#hello
 
 import numpy as np
 class VideoTranscriber:

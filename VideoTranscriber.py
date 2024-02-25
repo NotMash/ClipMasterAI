@@ -68,7 +68,7 @@ class VideoTranscriber:
 
         # Check if total text width exceeds frame width
         if total_text_width > frame.shape[1] - 2*margin:
-            print("INSIDE HEREEE")
+            #print("INSIDE HEREEE")
             # Reduce font size to fit text within frame
             font_size = max(min_font_size, int((max_font_size * (frame.shape[1] - 2 * margin)) / total_text_width))
             font = ImageFont.truetype(font_path, font_size)
@@ -126,7 +126,10 @@ class VideoTranscriber:
                 # Check if the current frame falls within the current transcription segment
                 if start_frame <= frame_count < start_frame + total_frames:
                     elapsed_time = (frame_count - start_frame) / self.fps
-                    word_index = int((elapsed_time / (end_time - start_time)) * len(words))
+                    #using elapsed percentage to work out the highlightation
+                    segment_duration = end_time - start_time
+                    elapsed_percentage = elapsed_time / segment_duration + 0.2
+                    word_index = int(elapsed_percentage * len(words))
                     word_index = min(max(0, word_index), len(words) - 1)
                     frame = self.highlight_word(frame, segment["text"], word_index)
                     speaking = True  # Set speaking flag to True if segment is found
@@ -141,7 +144,7 @@ class VideoTranscriber:
         video.release()
         print('Frames extracted')
 
-    def extract_audio(self, output_audio_path='test_videos/audio.mp3'):
+    def extract_audio(self, output_audio_path='output_videos/audio.mp3'):
         print('Extracting audio')
         video = VideoFileClip(self.video_path)
         audio = video.audio
@@ -173,8 +176,8 @@ class VideoTranscriber:
 
 # Define paths
 model_path = "small"
-video_path = "downloaded_videos/Ted.mp4"
-output_video_path = "test_videos/output.mp4"
+video_path = "downloaded_videos/ChunksPodcast.mp4"
+output_video_path = "output_videos/output.mp4"
 
 # Initialize VideoTranscriber instance
 transcriber = VideoTranscriber(model_path, video_path)

@@ -2,6 +2,7 @@ import shutil
 import os
 import cv2
 import numpy as np
+import torch
 from moviepy.editor import VideoFileClip, ImageSequenceClip, AudioFileClip
 from PIL import ImageFont, ImageDraw, Image
 from tqdm import tqdm
@@ -9,33 +10,75 @@ import whisper
 
 class VideoTranscriber:
     def __init__(self, model_path, video_path):
-        self.model = whisper.load_model(model_path)
+        self.model = whisper.load_model(model_path, device='cuda' if torch.cuda.is_available() else 'cpu')
         self.video_path = video_path
         self.audio_path = ''
         self.transcription = []
         self.fps = 0
         self.char_width = 0
 
-    def transcribe_video(self):
+    def transcribe_video(self, words_per_frame):
         print('Transcribing video')
         result = self.model.transcribe(self.audio_path)
-        self.transcription = result["segments"]
+        segments = result["segments"]
+
+        # Split each segment's text into smaller parts by whole words
+        for segment in segments:
+            text = segment['text']
+            # Define your desired maximum length for each subsegment in words
+            max_words_per_subsegment = words_per_frame  # for example, split every 10 words
+            words = text.split()
+            num_subsegments = (len(words) + max_words_per_subsegment - 1) // max_words_per_subsegment
+            subsegment_length = len(words) // num_subsegments
+
+            start_idx = 0
+            for idx in range(num_subsegments):
+                end_idx = min(start_idx + subsegment_length, len(words))
+                subsegment = ' '.join(words[start_idx:end_idx])
+                start_time = segment['start'] + idx * (segment['end'] - segment['start']) / num_subsegments
+                end_time = segment['start'] + (idx + 1) * (segment['end'] - segment['start']) / num_subsegments
+                self.transcription.append({
+                    'id': segment['id'],
+                    'start': start_time,
+                    'end': end_time,
+                    'text': subsegment,
+                })
+                start_idx = end_idx
+
         self.fps = VideoFileClip(self.video_path).fps
         print('Transcription complete')
 
     def highlight_word(self, frame, text, highlight_index):
         font_path = "FONT/Frank.ttf"  # Path to your custom font
-        font_size = 60  # Adjust the font size as needed
+        max_font_size = 60  # Maximum font size
+        min_font_size = 20  # Minimum font size
+        margin = 50
 
+        # Initialize font size
+        font_size = max_font_size
+
+        # Create font object
         font = ImageFont.truetype(font_path, font_size)
-        pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        draw = ImageDraw.Draw(pil_image)
 
         # Split text into words
         words = text.split()
 
         # Calculate total text width
         total_text_width = sum([font.getmask(word).getbbox()[2] for word in words]) + (len(words) - 1) * 15
+
+        # Check if total text width exceeds frame width
+        if total_text_width > frame.shape[1] - 2*margin:
+            print("INSIDE HEREEE")
+            # Reduce font size to fit text within frame
+            font_size = max(min_font_size, int((max_font_size * (frame.shape[1] - 2 * margin)) / total_text_width))
+            font = ImageFont.truetype(font_path, font_size)
+
+            # Recalculate total text width with reduced font size
+
+        total_text_width = sum([font.getmask(word).getbbox()[2] for word in words]) + (len(words) - 1) * 15
+
+        pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        draw = ImageDraw.Draw(pil_image)
 
         # Calculate starting x-coordinate to center text
         start_x = int((frame.shape[1] - total_text_width) / 2)
@@ -129,8 +172,8 @@ class VideoTranscriber:
         print("Video saved at:", output_video_path)
 
 # Define paths
-model_path = "base"
-video_path = "FINALVIDEO/final_video.mp4"
+model_path = "small"
+video_path = "downloaded_videos/Ted.mp4"
 output_video_path = "test_videos/output.mp4"
 
 # Initialize VideoTranscriber instance
@@ -140,7 +183,7 @@ transcriber = VideoTranscriber(model_path, video_path)
 transcriber.extract_audio()
 
 # Transcribe video and align with audio
-transcriber.transcribe_video()
+transcriber.transcribe_video(words_per_frame=5)
 
 # Create video with highlighted spoken words
 transcriber.create_video(output_video_path)

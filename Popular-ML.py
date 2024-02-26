@@ -1,3 +1,6 @@
+import joblib
+from transformers import RobertaTokenizerFast, TFRobertaForSequenceClassification, pipeline
+
 from youtube_transcript_api import YouTubeTranscriptApi
 import os
 import json
@@ -57,15 +60,43 @@ def preprocess_data(video_data):
         return None
 
 # Load pre-trained model
-model = BertForSequenceClassification.from_pretrained('bert-base-uncased')
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+# model = BertForSequenceClassification.from_pretrained('bert-base-uncased')
+# tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
+
 
 # Function to predict viral content using pre-trained model
-def predict_viral_content(text):
-    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
-    outputs = model(**inputs)
-    predicted_label = np.argmax(outputs.logits.detach().numpy())
-    return predicted_label
+def predict_viral_content(model, text):
+
+    if isinstance(text, list):
+        # Convert list of strings to a single string
+        text = ' '.join(text)
+
+    #####################################################################################################################
+
+    # emoji = {"anger": "😠", "disgust": "🤮", "fear": "😨😱", "happy": "🤗", "joy": "😂", "neutral": "😐",
+    #                        "sad": "😔", "sadness": "😔", "shame": "😳", "surprise": "😮"}
+    # results = model.predict([text])
+    # probability = model.predict_proba([text])
+    #
+    # print("text: "+ text)
+    # print("---results: "+ results+ " "+ emoji[results[0]])
+    # print("---probability: ", (np.max(probability)))
+    # print(" ")
+
+    #####################################################################################################################
+
+    results = model(text)
+    # print("text: ", text)
+    # print("prediction ", results)
+
+    # inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
+    # outputs = model(**inputs)
+    # print("----outputs:", outputs)
+    # predicted_label = np.argmax(outputs.logits.detach().numpy())
+    # return predicted_label
+
+    return results
 
 # Function to fetch video data using YouTube API
 def fetch_video_data(video_id, api_key):
@@ -95,21 +126,8 @@ def extract_times(segment_text):
         times.append([start_time, end_time])
     return times
 # Extract start and end times from segment text
-def extract_times(segment_text):
-    times = []
-    pattern = r'(\d+:\d+)'
-    matches = re.findall(pattern, segment_text)
-    for i in range(0, len(matches), 2):
-        start_time = matches[i]
-        if i + 1 < len(matches):
-            end_time = matches[i + 1]
-        else:
-            end_time = None
-        times.append([start_time, end_time])
-    return times
-# Extract start and end times from segment text
 
-def split_video_into_segments(response, transcript_data):
+def split_video_into_segments(response, transcript_data, lengthOfClip):
     try:
         duration_str = response['items'][0]['contentDetails']['duration']
 
@@ -134,7 +152,7 @@ def split_video_into_segments(response, transcript_data):
         total_seconds = hours * 3600 + minutes * 60 + seconds
 
         # Define segment length (e.g., 60 seconds)
-        segment_length_seconds = 60
+        segment_length_seconds = lengthOfClip
 
         # Split video into segments
         segments = []
@@ -183,6 +201,10 @@ def fetch_transcript(video_id):
 
 # Example usage
 if __name__ == "__main__":
+    tokenizer = RobertaTokenizerFast.from_pretrained("arpanghoshal/EmoRoBERTa")
+    model = TFRobertaForSequenceClassification.from_pretrained("arpanghoshal/EmoRoBERTa")
+
+
     # Your YouTube API key
     api_key = "AIzaSyAP3SwgXU_I5mUXYpuoRbV-nxzn5zVYZUY"
     if not api_key:
@@ -190,34 +212,49 @@ if __name__ == "__main__":
         exit(1)
 
     # Fetch video segments data
-    video_id = 'WqJhvUYLRzk'
+    video_id = 'SNFvgniAPz4'
     video_data = fetch_video_data(video_id, api_key)
     if video_data:
         entire_transcript = fetch_transcript(video_id)
-        print("here is the transcript")
-        print(entire_transcript)
+        #print("here is the transcript")
+        #print(entire_transcript)
 
         # Split video into segments (e.g., time intervals or sliding windows)
-        video_segments = split_video_into_segments(video_data, entire_transcript)
-        print(video_segments)
+        video_segments = split_video_into_segments(video_data, entire_transcript, lengthOfClip=45)
+        #print(video_segments)
         if video_segments:
             # Predict virality for each segment
             segment_virality_scores = []
+            count = 0
+            model = pipeline('sentiment-analysis', model='arpanghoshal/EmoRoBERTa')
             for segment in video_segments:
                 segment_text = segment['text']  # Adjusted segment text extraction
-                predicted_label = predict_viral_content(segment_text)
+                # print(count)
+                # print("Start time:", segment['start_time'])
+                # print("End time:", segment['end_time'])
+                predicted_label = predict_viral_content(model, segment_text)
+                #print("Predicted label:", predicted_label)
                 segment_virality_scores.append(predicted_label)
+                count += 1
+
+            #sort my predicted labelled clips and remove the ones that are below x threshold
+
+            sorted_scores = sorted(segment_virality_scores, key=lambda x: x['score'], reverse=True)
+            print(sorted_scores)
+
+            # print("Segment virality scores:", segment_virality_scores)
+
 
             # Select the most viral segment
-            most_viral_segment_index = np.argmax(segment_virality_scores)
-            best_segment = video_segments[most_viral_segment_index]
-            print("Best segment:", best_segment)
-
-            # Extract start and end times from the best segment
-            start_time = best_segment['start_time']
-            end_time = best_segment['end_time']
-            print("Start time:", start_time)
-            print("End time:", end_time)
+            # most_viral_segment_index = np.argmax(segment_virality_scores)
+            # best_segment = video_segments[most_viral_segment_index]
+            # print("Best segment:", best_segment)
+            #
+            # # Extract start and end times from the best segment
+            # start_time = best_segment['start_time']
+            # end_time = best_segment['end_time']
+            # print("Start time:", start_time)
+            # print("End time:", end_time)
         else:
             print("Error: Failed to split video into segments")
 

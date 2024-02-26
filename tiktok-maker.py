@@ -1,101 +1,70 @@
+import os
 from pytube import YouTube
 from moviepy.editor import VideoFileClip, CompositeVideoClip, TextClip
-
-import os
-
-from moviepy.config import change_settings
-# change_settings({"IMAGEMAGICK_BINARY": "C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe"})
-#"C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe"
-change_settings({"IMAGEMAGICK_BINARY": "/opt/homebrew/bin/magick"})
-
+from concurrent.futures import ThreadPoolExecutor
 import ssl
-from pytube import YouTube
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
-# Function to download YouTube video
-def download_youtube_video(youtube_url, output_path):
-    yt = YouTube(youtube_url)
-    yt = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
-    downloaded_video = yt.download(output_path)
-    return downloaded_video
+class TikTokVideoCreator:
+    def __init__(self, youtube_url, start_time, end_time, additional_clip_path, watermarked_text,
+                 output_resolution=(1080, 1920)):
+        self.youtube_url = youtube_url
+        self.start_time = start_time
+        self.end_time = end_time
+        self.additional_clip_path = additional_clip_path
+        self.watermarked_text = watermarked_text
+        self.output_resolution = output_resolution
+
+    def download_youtube_video(self, output_path):
+        yt = YouTube(self.youtube_url)
+        stream = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
+        downloaded_video_path = stream.download(output_path)
+        return downloaded_video_path
+
+    def resize_video(self, video_path, output_height):
+        video = VideoFileClip(video_path)
+        resized_video = video.subclip(self.start_time, self.end_time).resize(height=output_height)
+        return resized_video
+
+    def add_watermark_to_video(self, video):
+        watermark_text_clip = TextClip(self.watermarked_text, fontsize=40, color='white').set_duration(video.duration)
+        watermark_text_clip = watermark_text_clip.set_position((0.1, 0.8), relative=True).set_opacity(0.5)
+        final_video = CompositeVideoClip([video, watermark_text_clip])
+        return final_video
+
+    def create_tiktok_video(self):
+        downloaded_video_path = self.download_youtube_video("../downloaded_videos")
+        with ThreadPoolExecutor() as executor:
+            resized_video_future = executor.submit(self.resize_video, downloaded_video_path, self.output_resolution[1] // 2)
+            additional_clip_future = executor.submit(self.resize_video, self.additional_clip_path, self.output_resolution[1] // 2)
+            resized_video = resized_video_future.result()
+            additional_clip = additional_clip_future.result()
+
+        additional_clip = additional_clip.set_audio(None)
+        final_video = CompositeVideoClip([resized_video.set_position(("center", "top")),
+                                          additional_clip.set_position(("center", "bottom"))],
+                                         size=self.output_resolution)
+
+        # Add watermark to the final video
+        final_video_with_watermark = self.add_watermark_to_video(final_video)
+
+        final_video_path = "../FINALVIDEO/final_video.mp4"
+        final_video_with_watermark.write_videofile(final_video_path, codec="libx264", temp_audiofile="temp-audio.m4a", remove_temp=True, audio_codec="aac")
+        return final_video_path
 
 
-# Function to crop and resize video
-# Function to crop, resize and stack videos vertically
-def edit_video(youtube_video_path, additional_clip_path, output_resolution):
-    # Load the main video clip, crop and resize to the top half of the output resolution
-    youtube_video = VideoFileClip(youtube_video_path).resize(height=output_resolution[1] // 2)
-    # Load the additional clip, crop and resize to the bottom half of the output resolution
-    additional_clip = VideoFileClip(additional_clip_path).resize(height=output_resolution[1] // 2)
-
-    # Stack the clips vertically
-    final_video = CompositeVideoClip([youtube_video.set_position(("center", "top")),
-                                      additional_clip.set_position(("center", "bottom"))],
-                                     size=output_resolution)
-
-    edited_video_path = "stacked_video.mp4"
-    final_video.write_videofile(edited_video_path)
-    return edited_video_path
-
-
-# Function to add subtitles to the video
-def add_subtitles_to_video(video_path, subtitles_text):
-    # Create a TextClip object for subtitles
-    txt_clip = TextClip(subtitles_text, fontsize=24, color='white')
-    txt_clip = txt_clip.set_position('bottom').set_duration(10)
-    # Load the main video clip
-    video = VideoFileClip(video_path)
-    # Overlay the subtitles on the video
-    final_video = CompositeVideoClip([video, txt_clip])
-    final_video_path = "final_video_with_subtitles.mp4"
-    final_video.write_videofile(final_video_path)
-    return final_video_path
-
-# Main automation function
-# Function to create the final TikTok video
-# Function to create the final TikTok video
-def create_tiktok_video(youtube_url, start_time, end_time, additional_clip_path, subtitles_text,
-                        output_resolution=(1920, 1080)):
-    # Download the YouTube video
-    downloaded_video_path = download_youtube_video(youtube_url, os.getcwd())
-
-    # Crop the downloaded video between start_time and end_time
-    youtube_video = VideoFileClip(downloaded_video_path).subclip(start_time, end_time).resize(
-        height=output_resolution[1] // 2)
-
-    # Load the additional clip and resize it
-    additional_clip = VideoFileClip(additional_clip_path).resize(height=output_resolution[1] // 2)
-
-    # Stack the clips vertically
-    final_video = CompositeVideoClip([youtube_video.set_position(("center", "top")),
-                                      additional_clip.set_position(("center", "bottom"))],
-                                     size=output_resolution)
-
-    edited_video_path = "stacked_video.mp4"
-    final_video.write_videofile(edited_video_path)
-
-    # Add subtitles to the video
-    final_video_with_subtitles_path = add_subtitles_to_video(edited_video_path, subtitles_text)
-
-    return final_video_with_subtitles_path
-
+# Create directory for final video
+os.makedirs("../FINALVIDEO", exist_ok=True)
 
 # Example usage:
-final_video = create_tiktok_video(
-    youtube_url="https://www.youtube.com/watch?v=h5nRDUYtgJw",
-    start_time=20,
-    end_time=35,
-    # additional_clip_path="C:\\Users\\Ghafo\\Desktop\\projects\\Tiktok\\TikTok_ Minecraft COMPILATION.mp4",
-    #C:\Users\Ghafo\Desktop\projects\Tiktok\TikTok_ Minecraft COMPILATION.mp4
-    additional_clip_path="/Users/mash/PycharmProjects/pythonProject4/TikTok_ Minecraft COMPILATION.mp4",
-    subtitles_text="This is a TikTok video created using Python!"
+tiktok_creator = TikTokVideoCreator(
+    youtube_url="https://www.youtube.com/watch?v=RoBRy8LHbEc",
+    start_time=100,
+    end_time=120,
+    additional_clip_path="../downloaded_videos/GTA-CLIP-1.mp4",
+    watermarked_text="@PLACEHOLDER"
 )
-
+final_video = tiktok_creator.create_tiktok_video()
 
 print(f"Created TikTok video: {final_video}")
-
-
-#add captions
-#choose the best intervals
-#test mac comments

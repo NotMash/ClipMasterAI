@@ -6,6 +6,8 @@ import ssl
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
+
+# Create a class to create TikTok videos
 class TikTokVideoCreator:
     def __init__(self, youtube_url, start_time, end_time, additional_clip_path, output_resolution=(1080, 1920)):
         self.youtube_url = youtube_url

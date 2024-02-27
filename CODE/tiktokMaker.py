@@ -35,7 +35,7 @@ class TikTokVideoCreator:
     #     return final_video
 
     def create_tiktok_video(self):
-        downloaded_video_path = self.download_youtube_video("../TIKTOK-AUTOMATION/downloaded_videos")
+        downloaded_video_path = self.download_youtube_video("../downloaded_videos")
         with ThreadPoolExecutor() as executor:
             resized_video_future = executor.submit(self.resize_video, downloaded_video_path, self.output_resolution[1] // 2, self.start_time, self.end_time)
             additional_clip_future = executor.submit(self.resize_video, self.additional_clip_path, self.output_resolution[1] // 2, 0, self.end_time - self.start_time)

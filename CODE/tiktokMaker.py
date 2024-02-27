@@ -35,7 +35,7 @@ class TikTokVideoCreator:
     #     return final_video
 
     def create_tiktok_video(self):
-        downloaded_video_path = self.download_youtube_video("downloaded_videos")
+        downloaded_video_path = self.download_youtube_video("../downloaded_videos")
         with ThreadPoolExecutor() as executor:
             resized_video_future = executor.submit(self.resize_video, downloaded_video_path, self.output_resolution[1] // 2, self.start_time, self.end_time)
             additional_clip_future = executor.submit(self.resize_video, self.additional_clip_path, self.output_resolution[1] // 2, 0, self.end_time - self.start_time)
@@ -47,7 +47,7 @@ class TikTokVideoCreator:
                                           additional_clip.set_position(("center", "bottom"))],
                                          size=self.output_resolution)
 
-        final_video_path = os.path.join("FINALVIDEO", "final_video.mp4")
+        final_video_path = os.path.join("../FINALVIDEO", "final_video.mp4")
 
         # # Add watermark to the final video
         # # final_video_with_watermark = self.add_watermark_to_video(final_video)
@@ -72,7 +72,7 @@ tiktok_creator = TikTokVideoCreator(
     youtube_url="https://www.youtube.com/watch?v=SNFvgniAPz4",
     start_time=3060,
     end_time=3105,
-    additional_clip_path="downloaded_videos/MinecraftJumpAndRun.mp4",
+    additional_clip_path="../downloaded_videos/MinecraftJumpAndRun.mp4",
 )
 print("Creating TikTok video...'i think'")
 final_video = tiktok_creator.create_tiktok_video()

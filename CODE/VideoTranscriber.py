@@ -49,7 +49,7 @@ class VideoTranscriber:
         print('Transcription complete')
 
     def highlight_word(self, frame, text, highlight_index):
-        font_path = "FONT/Frank.ttf"  # Path to your custom font
+        font_path = "../FONT/Frank.ttf"  # Path to your custom font
         max_font_size = 60  # Maximum font size
         min_font_size = 20  # Minimum font size
         margin = 50
@@ -176,8 +176,8 @@ class VideoTranscriber:
 
 # Define paths
 model_path = "small"
-video_path = "downloaded_videos/ChunksPodcast.mp4"
-output_video_path = "output_videos/output.mp4"
+video_path = "../downloaded_videos/ChunksPodcast.mp4"
+output_video_path = "../output_videos/output.mp4"
 
 # Initialize VideoTranscriber instance
 transcriber = VideoTranscriber(model_path, video_path)

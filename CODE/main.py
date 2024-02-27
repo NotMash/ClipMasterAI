@@ -1,6 +1,6 @@
 
-from tiktokMaker import TikTokVideoCreator
-from VideoTranscriber import VideoTranscriber
+from CODE.tiktokMaker import TikTokVideoCreator
+from CODE.VideoTranscriber import VideoTranscriber
 
 #sample usage of the TikTokVideoCreator and
 

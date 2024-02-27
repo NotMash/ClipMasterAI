@@ -8,6 +8,7 @@ from PIL import ImageFont, ImageDraw, Image
 from tqdm import tqdm
 import whisper
 
+# Create a class to transcribe videos
 class VideoTranscriber:
     def __init__(self, model_path, video_path):
         self.model = whisper.load_model(model_path, device='cuda' if torch.cuda.is_available() else 'cpu')
@@ -175,18 +176,18 @@ class VideoTranscriber:
         print("Video saved at:", output_video_path)
 
 # Define paths
-model_path = "small"
-video_path = "../downloaded_videos/ChunksPodcast.mp4"
-output_video_path = "../output_videos/output.mp4"
-
-# Initialize VideoTranscriber instance
-transcriber = VideoTranscriber(model_path, video_path)
-
-# Extract audio from video
-transcriber.extract_audio()
-
-# Transcribe video and align with audio
-transcriber.transcribe_video(words_per_frame=5)
-
-# Create video with highlighted spoken words
-transcriber.create_video(output_video_path)
+# model_path = "small"
+# video_path = "../downloaded_videos/ChunksPodcast.mp4"
+# output_video_path = "../output_videos/output.mp4"
+#
+# # Initialize VideoTranscriber instance
+# transcriber = VideoTranscriber(model_path, video_path)
+#
+# # Extract audio from video
+# transcriber.extract_audio()
+#
+# # Transcribe video and align with audio
+# transcriber.transcribe_video(words_per_frame=5)
+#
+# # Create video with highlighted spoken words
+# transcriber.create_video(output_video_path)

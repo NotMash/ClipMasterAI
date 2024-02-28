@@ -106,11 +106,33 @@ def fetch_video_data(video_id, api_key):
             part='snippet,contentDetails,statistics',
             id=video_id
         ).execute()
+
+        # Save fetched data to cache
+        save_to_cache(video_id, response)
+
         print("Video API response:", response)  # Print the response data
         return response
     except Exception as e:
         print("Error fetching video data:", e)
         return None
+def load_cached_data(video_id):
+    try:
+        with open(f'{video_id}_cache.json', 'r') as file:
+            print("Data loaded from cache.")
+            return json.load(file)
+    except FileNotFoundError:
+        print("Cache file not found, we will fetch the data from the API.")
+        return None
+    except Exception as e:
+        print("Error loading cached data:", e)
+        return None
+def save_to_cache(video_id, data):
+    try:
+        with open(f'{video_id}_cache.json', 'w') as file:
+            json.dump(data, file)
+            print("Data saved to cache.")
+    except Exception as e:
+        print("Error saving data to cache:", e)
 
 # Extract start and end times from segment text
 def extract_times(segment_text):
@@ -202,7 +224,7 @@ def fetch_transcript(video_id):
 # Example usage
 if __name__ == "__main__":
     tokenizer = RobertaTokenizerFast.from_pretrained("arpanghoshal/EmoRoBERTa")
-    model = TFRobertaForSequenceClassification.from_pretrained("arpanghoshal/EmoRoBERTa")
+    #model = TFRobertaForSequenceClassification.from_pretrained("arpanghoshal/EmoRoBERTa")
 
 
     # Your YouTube API key
@@ -212,8 +234,13 @@ if __name__ == "__main__":
         exit(1)
 
     # Fetch video segments data
-    video_id = 'SNFvgniAPz4'
-    video_data = fetch_video_data(video_id, api_key)
+    video_id = 'ewsYjc5cwtA'
+
+    video_data = load_cached_data(video_id)
+
+    if (video_data is None):
+        video_data = fetch_video_data(video_id, api_key)
+
     if video_data:
         entire_transcript = fetch_transcript(video_id)
         #print("here is the transcript")

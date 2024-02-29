@@ -32,6 +32,9 @@ button {
   display: block;
   width: 100%;
   padding: 10px;
+
+  margin: 10px 0 0 0;
+
   background-color: #007bff;
   color: #fff;
   border: none;
@@ -42,4 +45,28 @@ button {
 
 button:hover {
   background-color: #0056b3;
+}
+
+/*loading bar*/
+
+@keyframes loading {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.loading-bar {
+  height: 5px;
+  background-color: #007bff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  animation: loading 2s linear infinite;
+}
+
+.hidden {
+  display: none;
 }

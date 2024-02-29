@@ -9,9 +9,13 @@ function App() {
     const [modelPath, setModelPath] = useState("base");
     const [wordPerFrame, setWordPerFrame] = useState(5);
 
+    // Determine base URL based on the environment
+    const hostname = window.location.hostname;
+    const baseURL = hostname === 'localhost' ? 'http://localhost:5001' : `http://${hostname}:5001`;
+
     const handleCreateTikTok = async () => {
         try {
-            const response = await axios.post('http://127.0.0.1:5000/create_tiktok', {
+            const response = await axios.post(`${baseURL}/create_tiktok`, {
                 youtube_url: youtubeUrl,
                 start_time: startTime,
                 end_time: endTime,
@@ -26,7 +30,7 @@ function App() {
 
     const handleDownloadVideo = async () => {
         try {
-            const response = await axios.get('http://127.0.0.1:5000/download_video', { responseType: 'blob' });
+            const response = await axios.get(`${baseURL}/download_video`, { responseType: 'blob' });
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;

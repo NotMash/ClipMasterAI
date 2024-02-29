@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './App.css';
 
 function App() {
     const [youtubeUrl, setYoutubeUrl] = useState("");
     const [startTime, setStartTime] = useState(0);
     const [endTime, setEndTime] = useState(10);
     const [modelPath, setModelPath] = useState("base");
-    const [wordPerFrame, setWordPerFrame] = useState(10);
+    const [wordPerFrame, setWordPerFrame] = useState(5);
 
     const handleCreateTikTok = async () => {
         try {

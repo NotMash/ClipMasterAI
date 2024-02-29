@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, send_file
-from CODE.tiktokMaker import TikTokVideoCreator
-from CODE.VideoTranscriber import VideoTranscriber
+from tiktokMaker import TikTokVideoCreator
+from VideoTranscriber import VideoTranscriber
 import logging
 from flask import Flask
 from flask_cors import CORS

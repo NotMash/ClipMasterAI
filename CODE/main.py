@@ -6,11 +6,18 @@ from CODE.VideoTranscriber import VideoTranscriber
 
 def main():
     # Prompt user for inputs
-    youtube_url = input("Enter the YouTube URL: ")
-    start_time = int(input("Enter the start time (in seconds): "))
-    end_time = int(input("Enter the end time (in seconds): "))
-    model_path = input("Enter the model path: ")
-    word_per_frame = int(input("Enter the number of words per frame: "))
+    # youtube_url = input("Enter the YouTube URL: ")
+    # start_time = int(input("Enter the start time (in seconds): "))
+    # end_time = int(input("Enter the end time (in seconds): "))
+    # model_path = input("Enter the model path: ")
+    # word_per_frame = int(input("Enter the number of words per frame: "))
+
+    youtube_url = "https://www.youtube.com/watch?v=1k3mXZBM4bU"
+    start_time = 0
+    end_time = 10
+    model_path = "base"
+    word_per_frame = 10
+
 
 
 
@@ -19,7 +26,7 @@ def main():
         start_time=start_time,
         end_time=end_time,
         additional_clip_path="../downloaded_videos/GTA-CLIP-1.mp4",
-        watermarked_text="@PLACE"
+        # watermarked_text="@PLACE"
     )
 
     final_video = tiktok_creator.create_tiktok_video()

@@ -7,16 +7,16 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.6.7",
+    "concurrently": "^8.2.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^5.0.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "node_modules/.bin/concurrently \"npm run start:react\" \"npm run start:backend\"",
+    "start:react": "react-scripts start",
+    "start:backend": "python ../CODE/backend.py"
   },
   "eslintConfig": {
     "extends": [

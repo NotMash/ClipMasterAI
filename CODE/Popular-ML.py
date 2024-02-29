@@ -86,15 +86,7 @@ def predict_viral_content(model, text):
 
     #####################################################################################################################
 
-    results = model(text)
-    # print("text: ", text)
-    # print("prediction ", results)
-
-    # inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
-    # outputs = model(**inputs)
-    # print("----outputs:", outputs)
-    # predicted_label = np.argmax(outputs.logits.detach().numpy())
-    # return predicted_label
+    results = model(text)[0]
 
     return results
 
@@ -108,17 +100,17 @@ def fetch_video_data(video_id, api_key):
         ).execute()
 
         # Save fetched data to cache
-        save_to_cache(video_id, response)
+        save_to_cache(video_id, response, 'videoAPI')
 
         print("Video API response:", response)  # Print the response data
         return response
     except Exception as e:
         print("Error fetching video data:", e)
         return None
-def load_cached_data(video_id):
+def load_cached_data(video_id, type):
     try:
-        with open(f'{video_id}_cache.json', 'r') as file:
-            print("Data loaded from cache.")
+        with open(f'{type+video_id}_cache.json', 'r') as file:
+            print(type+": Data loaded from cache.")
             return json.load(file)
     except FileNotFoundError:
         print("Cache file not found, we will fetch the data from the API.")
@@ -126,9 +118,9 @@ def load_cached_data(video_id):
     except Exception as e:
         print("Error loading cached data:", e)
         return None
-def save_to_cache(video_id, data):
+def save_to_cache(video_id, data, type):
     try:
-        with open(f'{video_id}_cache.json', 'w') as file:
+        with open(f'{type+video_id}_cache.json', 'w') as file:
             json.dump(data, file)
             print("Data saved to cache.")
     except Exception as e:
@@ -197,7 +189,13 @@ def split_video_into_segments(response, transcript_data, lengthOfClip):
 
 def fetch_transcript(video_id):
     try:
-        transcript = YouTubeTranscriptApi.get_transcript(video_id)
+        transcript = load_cached_data(video_id, 'transcript')
+
+        if (transcript is None):
+            save_to_cache(video_id, YouTubeTranscriptApi.get_transcript(video_id), 'transcript')
+            transcript = load_cached_data(video_id, 'transcript')
+
+
         # youtube = build('youtube', 'v3', developerKey=api_key)
         # captions = youtube.captions().list(
         #     part='snippet',
@@ -220,11 +218,47 @@ def fetch_transcript(video_id):
         return None
 
 
+def select_top_clips(sorted_segment_virality_scores, max_occurrences=2, max_clips=10):
 
+    # Dictionary to keep track of the occurrences of each label
+    label_counts = {
+        'admiration': 0,
+        'surprise': 0,
+        'confusion': 0,
+        'gratitude': 0,
+        'neutral': 0,
+        'approval': 0,
+        'love': 0,
+        'excitement': 0,
+        'curiosity': 0,
+        'joy': 0
+    }
+
+    # List to store selected clips
+    selected_clips = []
+
+
+    # Iterate through sorted_segment_virality_scores
+    for item in sorted_segment_virality_scores:
+        label = item['label']
+
+        # Check if the label has reached the maximum occurrences
+        if label_counts.get(label, 0) < max_occurrences:
+            selected_clips.append(item)
+            label_counts[label] = label_counts.get(label, 0) + 1
+
+        # Check if already selected max_clips clips
+        if len(selected_clips) == max_clips:
+            break
+
+    return selected_clips
 # Example usage
 if __name__ == "__main__":
+    print("loading model...")
     tokenizer = RobertaTokenizerFast.from_pretrained("arpanghoshal/EmoRoBERTa")
     #model = TFRobertaForSequenceClassification.from_pretrained("arpanghoshal/EmoRoBERTa")
+    model = pipeline('sentiment-analysis', model='arpanghoshal/EmoRoBERTa')
+    print("Finished loading model...")
 
 
     # Your YouTube API key
@@ -234,56 +268,48 @@ if __name__ == "__main__":
         exit(1)
 
     # Fetch video segments data
-    video_id = 'ewsYjc5cwtA'
+    video_id = 'qDUlRijagio'
 
-    video_data = load_cached_data(video_id)
+    video_data = load_cached_data(video_id, 'videoAPI')
 
     if (video_data is None):
         video_data = fetch_video_data(video_id, api_key)
 
     if video_data:
         entire_transcript = fetch_transcript(video_id)
-        #print("here is the transcript")
-        #print(entire_transcript)
 
         # Split video into segments (e.g., time intervals or sliding windows)
         video_segments = split_video_into_segments(video_data, entire_transcript, lengthOfClip=45)
-        #print(video_segments)
+
         if video_segments:
             # Predict virality for each segment
             segment_virality_scores = []
             count = 0
-            model = pipeline('sentiment-analysis', model='arpanghoshal/EmoRoBERTa')
+            print("Predicting virality scores of ",len(video_segments)," segments...")
             for segment in video_segments:
                 segment_text = segment['text']  # Adjusted segment text extraction
                 # print(count)
                 # print("Start time:", segment['start_time'])
                 # print("End time:", segment['end_time'])
                 predicted_label = predict_viral_content(model, segment_text)
-                #print("Predicted label:", predicted_label)
+                predicted_label['start_time'] = segment['start_time']
+                predicted_label['end_time'] = segment['end_time']
                 segment_virality_scores.append(predicted_label)
                 count += 1
-
+            print("Finished predicting virality scores...")
+            #print("Segment virality scores:", segment_virality_scores)
             #sort my predicted labelled clips and remove the ones that are below x threshold
 
-            sorted_scores = sorted(segment_virality_scores, key=lambda x: x['score'], reverse=True)
-            print(sorted_scores)
-
-            # print("Segment virality scores:", segment_virality_scores)
+            print("Sorting the scores...")
+            sorted_segment_virality_scores = sorted(segment_virality_scores, key=lambda x: x['score'], reverse=True)
+            print("Sorted the scores...")
 
 
             # Select the most viral segment
-            # most_viral_segment_index = np.argmax(segment_virality_scores)
-            # best_segment = video_segments[most_viral_segment_index]
-            # print("Best segment:", best_segment)
-            #
-            # # Extract start and end times from the best segment
-            # start_time = best_segment['start_time']
-            # end_time = best_segment['end_time']
-            # print("Start time:", start_time)
-            # print("End time:", end_time)
+            clips = select_top_clips(sorted_segment_virality_scores)
+            print("Selected clips:", clips)
+
         else:
             print("Error: Failed to split video into segments")
-
     else:
         print("Error: Failed to fetch video data from YouTube API")
